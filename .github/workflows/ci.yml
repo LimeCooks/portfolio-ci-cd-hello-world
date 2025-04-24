@@ -30,11 +30,20 @@ jobs:
       - name: Build Docker image
         run: docker build -t hello-secure-world:${{ github.sha }} .
 
-      # Optional: push to Docker Hub
-      # - name: Log in to Docker Hub
-      #   run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" \
-      #     | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
-      # - name: Push image
-      #   run: |
-      #     docker tag hello-secure-world:${{ github.sha }} YOUR_USER/hello-secure-world:latest
-      #     docker push YOUR_USER/hello-secure-world:latest
+      - name: Smoke-test container
+        run: |
+          # run your image and check it prints the expected message
+          docker run --rm hello-secure-world:${{ github.sha }} \
+            python -u app/main.py \
+            | grep "Hello, Secure World!"
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" \
+            | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
+      - name: Push image
+        run: |
+          docker tag hello-secure-world:${{ github.sha }} \
+                  ${{ secrets.DOCKER_HUB_USERNAME }}/hello-secure-world:latest
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/hello-secure-world:latest
+
